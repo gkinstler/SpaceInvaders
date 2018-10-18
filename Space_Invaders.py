@@ -66,6 +66,9 @@ class Enemy:
                 newEnemies.append(newEnemy)
         return newEnemies
 
+pygame.mixer.music.load("wsp180216d3_03_Sleeping_Man.mp3")
+pygame.mixer.music.play(-1)
+
 player = Player()
 enemies = Enemy.createEnemies()
 
