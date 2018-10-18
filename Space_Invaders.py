@@ -18,6 +18,8 @@ pygame.init()
 gameDisplay = pygame.display.set_mode((windowWidth, windowHeight))
 pygame.display.set_caption('Space Invaders')
 
+titleFont = pygame.font.SysFont('Arial', 40, True)
+
 clock = pygame.time.Clock()
 
 playerImg = pygame.image.load("si-player.gif")
@@ -76,6 +78,8 @@ while isAlive:
     
     player.show()
     
+    titleText = titleFont.render('SPACE INVADERS', False, green)
+    gameDisplay.blit(titleText, (windowWidth / 2 - titleText.get_width() / 2, 0))
 
     pygame.display.update()
     clock.tick(60)
