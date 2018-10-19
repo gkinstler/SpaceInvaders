@@ -1,4 +1,5 @@
 import pygame
+import random
 
 windowWidth = 400
 windowHeight = 600
@@ -33,6 +34,7 @@ playerImg = pygame.image.load("si-player.gif")
 backgroundImg = pygame.image.load("si-background.gif")
 enemyImg = pygame.image.load('si-enemy.gif')
 bulletImg = pygame.image.load('si-bullet.gif')
+# need to add enemy bullet
 
 # Sounds
 laserSound = pygame.mixer.Sound('LASER.wav')
@@ -73,6 +75,10 @@ class Player(GameObject):
         self.direction = -1
     def stopMoving(self):
         self.direction = 0
+    def shoot(self):
+        laserSound.play()
+        newBullet = Bullet(self.xcor + (player.width / 2) - (bulletImg.get_width() / 2), self.ycor, bulletImg, 10)
+        bullets.append(newBullet)
 
 class Enemy(GameObject):
     def __init__(self, xcor, ycor, image, speed):
@@ -84,6 +90,9 @@ class Enemy(GameObject):
         self.ycor += enemyImg.get_height() / 2
     def changeDirection(self):
         self.direction *= -1
+    def shoot(self):
+        newBullet = Bullet(self.xcor + self.width / 2, self.ycor, bulletImg , -2)
+        enemyBullets.append(newBullet)
     @staticmethod
     def createEnemies(level):
         newEnemies = []
@@ -111,18 +120,23 @@ pygame.mixer.music.play(-1)
 
 player = Player(windowWidth / 2 - playerImg.get_width() / 2, wallBottom - playerImg.get_height(), playerImg, 5)
 pointsPerEnemy = 100
+
+enemies = []
+enemyBullets = []
 bullets = []
 levels = []
+
 levels.append(Level(1, 3, 5, 1))
 levels.append(Level(2, 5, 6, 2))
 levels.append(Level(3, 5, 8, 3))
 
-enemies = Enemy.createEnemies(levels[0])
+gameSpeed = 60
+enemyShotDelay = 0
 
 while player.isAlive:
     
     for event in pygame.event.get():
-        print(str(event))
+        # print(str(event))
         if event.type == pygame.QUIT:
             player.isAlive = False
 
@@ -132,9 +146,7 @@ while player.isAlive:
             elif event.key == pygame.K_RIGHT:
                 player.moveRight()
             elif event.key == pygame.K_SPACE:
-                laserSound.play()
-                newBullet = Bullet(player.xcor + (player.width / 2) - (bulletImg.get_width() / 2), player.ycor, bulletImg, 10)
-                bullets.append(newBullet)
+                player.shoot()
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
@@ -143,7 +155,7 @@ while player.isAlive:
 # Check to see if enemy array empty and move up one level 
     if len(enemies) == 0: #size of the enemy array
         player.level += 1
-        enemies = Enemy.createEnemies(levels[player.level - 1])
+        enemies = Enemy.createEnemies(levels[0])
 
     for enemy in enemies:
         if isCollision(enemy, player):
@@ -165,11 +177,28 @@ while player.isAlive:
                 player.score += pointsPerEnemy
                 bullets.remove(bullet)
                 break
+
+    for bullet in enemyBullets:
+        if bullet.ycor + bullet.height> wallBottom:
+            try:
+                enemyBullets.remove(bullet)
+            except ValueError:
+                pass
+        if isCollision(player, bullet):
+            player.isAlive = False
             
+    enemyShotDelay += 1
     for enemy in enemies:
+        enemyCount = levels[player.level - 1].enemyColumnCount * levels[player.level - 1].enemyRowCount
+        if (enemyShotDelay > 100 and random.randint(1, enemyCount + 1) == 1):
+            enemy.shoot()
+            enemyShotDelay = 0
         enemy.moveOver()
 
     for bullet in bullets:
+        bullet.move()
+
+    for bullet in enemyBullets:
         bullet.move()
 
     gameDisplay.blit(gameDisplay, (0,0))
@@ -186,6 +215,9 @@ while player.isAlive:
         enemy.show()
 
     for bullet in bullets:
+        bullet.show()
+
+    for bullet in enemyBullets:
         bullet.show()
     
     player.show()
