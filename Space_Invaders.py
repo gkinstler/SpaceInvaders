@@ -21,7 +21,7 @@ blue = (0, 0, 255)
 pygame.init()
 
 gameDisplay = pygame.display.set_mode((windowWidth, windowHeight))
-pygame.display.set_caption('Space Invaders')
+pygame.display.set_caption('Space Invaders') # this is the caption of the display box
 
 titleFont = pygame.font.SysFont('Arial', 40, True)
 scoreFont = pygame.font.SysFont('Arial', 26, True)
@@ -34,12 +34,9 @@ backgroundImg = pygame.image.load("si-background.gif")
 enemyImg = pygame.image.load('si-enemy.gif')
 bulletImg = pygame.image.load('si-bullet.gif')
 
-def isCollision(a, b):
-    if a.xcor + a.width > b.xcor and a.xcor < b.xcor + b.width \
-    and a.ycor + a.height > b.ycor and a.ycor < b.ycor + b.height:
-        return True
-    else:
-        return False 
+def isCollision(a, b): # this is a true/false statement.  We did have an if statement before.
+    return a.xcor + a.width > b.xcor and a.xcor < b.xcor + b.width \
+    and a.ycor + a.height > b.ycor and a.ycor < b.ycor + b.height
 
 class GameObject:
     def __init__(self, xcor, ycor, image, speed):
@@ -60,14 +57,11 @@ class Player(GameObject):
         self.level = 0
         self.isAlive = True
     def show(self):
-        movementAmount = self.direction * self.speed
-        newX = self.xcor + movementAmount
-        
+        newX = self.xcor + self.direction * self.speed
         if newX < wallLeft or newX > wallRight - playerImg.get_width():
             self.xcor = self.xcor
         else:
             self.xcor = newX
-
         super().show()
     def moveRight(self):
         self.direction = 1
@@ -86,6 +80,7 @@ class Enemy(GameObject):
         self.ycor += enemyImg.get_height() / 2
     def changeDirection(self):
         self.direction *= -1
+    @staticmethod
     def createEnemies(level):
         newEnemies = []
         for x in range(0, level.enemyColumnCount):
@@ -97,7 +92,7 @@ class Enemy(GameObject):
 class Bullet(GameObject):
     def __init__(self, xcor, ycor, image, speed):
         super().__init__(xcor, ycor, image, speed)
-    def move (self):
+    def move(self):
         self.ycor -= self.speed
 
 class Level:
@@ -123,6 +118,7 @@ enemies = Enemy.createEnemies(levels[0])
 while player.isAlive:
     
     for event in pygame.event.get():
+        print(str(event))
         if event.type == pygame.QUIT:
             player.isAlive = False
 
@@ -140,7 +136,7 @@ while player.isAlive:
                 player.stopMoving()
 
 # Check to see if enemy array empty and move up one level 
-    if len(enemies) == 0:
+    if len(enemies) == 0: #size of the enemy array
         player.level += 1
         enemies = Enemy.createEnemies(levels[player.level - 1])
 
@@ -176,7 +172,7 @@ while player.isAlive:
     gameWidth = wallRight - wallLeft
     gameHeight = wallBottom - wallTop
 
-
+    # Draw a white rectangle with the background image just inside of it to create the game border
     pygame.draw.rect(gameDisplay, white, (gameSideMargin, gameTopMargin, windowWidth - gameSideMargin * 2, windowHeight - gameBottomMargin - gameTopMargin))
     gameDisplay.blit(backgroundImg, (wallLeft, wallTop), (0, 0, gameWidth, gameHeight))
     
@@ -189,11 +185,13 @@ while player.isAlive:
     player.show()
     
     titleText = titleFont.render('SPACE INVADERS', False, green)
-    scoreText = scoreFont.render('Score: ' + str(player), False, green)
+    scoreText = scoreFont.render('Score: ' + str(player.score), False, green)
     gameDisplay.blit(titleText, (windowWidth / 2 - titleText.get_width() / 2, 0))
     gameDisplay.blit(scoreText, (wallLeft , wallBottom + gameBorderWidth))
 
     pygame.display.update()
     clock.tick(60)
+
+pygame.QUIT
     
 
