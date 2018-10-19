@@ -24,10 +24,12 @@ gameDisplay = pygame.display.set_mode((windowWidth, windowHeight))
 pygame.display.set_caption('Space Invaders')
 
 titleFont = pygame.font.SysFont('Arial', 40, True)
+scoreFont = pygame.font.SysFont('Arial', 26, True)
 
 clock = pygame.time.Clock()
 
-playerImg = pygame.image.load("Bennett Head.png")
+# Images
+playerImg = pygame.image.load("si-player.gif")
 backgroundImg = pygame.image.load("si-background.gif")
 enemyImg = pygame.image.load('si-enemy.gif')
 bulletImg = pygame.image.load('si-bullet.gif')
@@ -39,13 +41,24 @@ def isCollision(a, b):
     else:
         return False 
 
-class Player:
-    xcor = 60
-    ycor = wallBottom - playerImg.get_height()
-    width = playerImg.get_width()
-    height = playerImg.get_height()
-    speed = 5
-    direction = 0
+class GameObject:
+    def __init__(self, xcor, ycor, image, speed):
+        self.xcor = xcor
+        self.ycor = ycor
+        self.img = image
+        self.speed = speed
+        self.width = image.get_width()
+        self.height = image.get_height()
+    def show(self):
+        gameDisplay.blit(self.img, (self.xcor, self.ycor))
+
+class Player(GameObject):
+    def __init__(self, xcor, ycor, image, speed):
+        super().__init__(xcor, ycor, image, speed)
+        self.direction = 0
+        self.score = 0
+        self.level = 0
+        self.isAlive = True
     def show(self):
         movementAmount = self.direction * self.speed
         newX = self.xcor + movementAmount
@@ -55,7 +68,7 @@ class Player:
         else:
             self.xcor = newX
 
-        gameDisplay.blit(playerImg, (self.xcor, self.ycor))
+        super().show()
     def moveRight(self):
         self.direction = 1
     def moveLeft(self):
@@ -63,58 +76,55 @@ class Player:
     def stopMoving(self):
         self.direction = 0
 
-class Enemy:
-    xcor = 0
-    ycor = 0
-    width = enemyImg.get_width()
-    height = enemyImg.get_height()
-    speed = 1
-    direction = 1
-    def show(self):
-        gameDisplay.blit(enemyImg, (self.xcor, self.ycor))
+class Enemy(GameObject):
+    def __init__(self, xcor, ycor, image, speed):
+        super().__init__(xcor, ycor, image, speed)
+        self.direction = 1
     def moveOver(self):
         self.xcor += self.direction * self.speed
     def moveDown(self):
         self.ycor += enemyImg.get_height() / 2
     def changeDirection(self):
         self.direction *= -1
-    def createEnemies():
+    def createEnemies(level):
         newEnemies = []
-        for x in range(0, 5):
-            for y in range(0, 3):
-                newEnemy = Enemy()
-                newEnemy.xcor = wallLeft + 1 + enemyImg.get_width() * x
-                newEnemy.ycor = gameTopMargin + gameBorderWidth + enemyImg.get_height() * y
+        for x in range(0, level.enemyColumnCount):
+            for y in range(0, level.enemyRowCount):
+                newEnemy = Enemy(wallLeft + 1 + enemyImg.get_width() * x, wallTop + enemyImg.get_height() * y, enemyImg, level.enemySpeed)
                 newEnemies.append(newEnemy)
         return newEnemies
 
-class Bullet:
-    xcor = 0
-    ycor = 0
-    width = bulletImg.get_width()
-    height = bulletImg.get_height()
-    speed = 10
-    def __init__(self, x, y):
-        self.xcor = x
-        self.ycor = y
-    def show (self):
-        gameDisplay.blit(bulletImg, (self.xcor, self.ycor))
+class Bullet(GameObject):
+    def __init__(self, xcor, ycor, image, speed):
+        super().__init__(xcor, ycor, image, speed)
     def move (self):
         self.ycor -= self.speed
+
+class Level:
+    def __init__ (self, number, enemyRowCount, enemyColumnCount, enemySpeed):
+        self.number = number
+        self.enemyRowCount = enemyRowCount
+        self.enemyColumnCount = enemyColumnCount
+        self.enemySpeed = enemySpeed
 
 pygame.mixer.music.load("wsp180216d3_03_Sleeping_Man.mp3")
 pygame.mixer.music.play(-1)
 
-player = Player()
-enemies = Enemy.createEnemies()
+player = Player(windowWidth / 2 - playerImg.get_width() / 2, wallBottom - playerImg.get_height(), playerImg, 5)
+pointsPerEnemy = 100
 bullets = []
+levels = []
+levels.append(Level(1, 3, 5, 1))
+levels.append(Level(2, 5, 6, 2))
+levels.append(Level(3, 5, 8, 3))
 
-isAlive = True
-while isAlive:
+enemies = Enemy.createEnemies(levels[0])
+
+while player.isAlive:
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            isAlive = False
+            player.isAlive = False
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
@@ -122,27 +132,37 @@ while isAlive:
             elif event.key == pygame.K_RIGHT:
                 player.moveRight()
             elif event.key == pygame.K_SPACE:
-                newBullet = Bullet(player.xcor, player.ycor)
+                newBullet = Bullet(player.xcor + (player.width / 2) - (bulletImg.get_width() / 2), player.ycor, bulletImg, 10)
                 bullets.append(newBullet)
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
                 player.stopMoving()
 
-    
+# Check to see if enemy array empty and move up one level 
+    if len(enemies) == 0:
+        player.level += 1
+        enemies = Enemy.createEnemies(levels[player.level - 1])
+
     for enemy in enemies:
-        for bullet in bullets:
-            if isCollision(enemy, bullet):
-                enemies.remove(enemy)
-                bullets.remove(bullet)
-                break
         if isCollision(enemy, player):
-            isAlive = False
+            player.isAlive = False
         if enemy.xcor + enemyImg.get_width() >= wallRight or enemy.xcor <= wallLeft:
             for e in enemies:
                 e.changeDirection()
                 e.moveDown()
             break
+
+    for bullet in bullets:
+        if bullet.ycor < wallTop:
+            bullets.remove(bullet)
+            break
+        for enemy in enemies:
+            if isCollision(enemy, bullet):
+                enemies.remove(enemy)
+                player.score += pointsPerEnemy
+                bullets.remove(bullet)
+                break
             
     for enemy in enemies:
         enemy.moveOver()
@@ -169,7 +189,9 @@ while isAlive:
     player.show()
     
     titleText = titleFont.render('SPACE INVADERS', False, green)
+    scoreText = scoreFont.render('Score: ' + str(player), False, green)
     gameDisplay.blit(titleText, (windowWidth / 2 - titleText.get_width() / 2, 0))
+    gameDisplay.blit(scoreText, (wallLeft , wallBottom + gameBorderWidth))
 
     pygame.display.update()
     clock.tick(60)
