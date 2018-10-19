@@ -230,6 +230,36 @@ while player.isAlive:
     pygame.display.update()
     clock.tick(60)
 
+showEndScreen = True
+while showEndScreen:
+    
+    for event in pygame.event.get():
+        #print(str(event))
+        if event.type == pygame.QUIT:
+            showEndScreen = False
+        
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_Space:
+                showEndScreen = False
+    
+    gameDisplay.blit(gameDisplay, (0,0))
+    gameDisplay.fill(black)
+
+    gameWidth = wallRight - wallLeft
+    gameHeight = wallBottom - wallTop
+
+    pygame.draw.rect(gameDisplay, white, (gameSideMargin, gameTopMargin, windowWidth - gameSideMargin * 2, windowHeight - gameBottomMargin - gameTopMargin))
+    gameDisplay.blit(backgroundImg, (wallLeft, wallTop), (0, 0, gameWidth, gameHeight))
+
+    titleText = titleFont.render('SPACE INVADERS', False, green)
+    scoreText = scoreFont.render('Score: ' + str(player.score), False, green)
+    gameDisplay.blit(titleText, (windowWidth / 2 - titleText.get_width() / 2, 0))
+    gameDisplay.blit(scoreText, (windowWidth / 2 - scoreText.get_width() / 2, 300))
+
+    pygame.display.update()
+    
+    clock.tick(60)
+
 pygame.QUIT
     
 
