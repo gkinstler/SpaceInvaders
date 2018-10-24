@@ -239,7 +239,7 @@ while showEndScreen:
             showEndScreen = False
         
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_Space:
+            if event.key == pygame.K_SPACE:
                 showEndScreen = False
     
     gameDisplay.blit(gameDisplay, (0,0))
