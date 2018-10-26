@@ -30,7 +30,7 @@ scoreFont = pygame.font.SysFont('Arial', 26, True)
 clock = pygame.time.Clock()
 
 # Images
-playerImg = pygame.image.load("si-player.gif")
+playerImg = pygame.image.load("Bennett Head.png")
 backgroundImg = pygame.image.load("si-background.gif")
 enemyImg = pygame.image.load('si-enemy.gif')
 bulletImg = pygame.image.load('si-bullet.gif')
@@ -179,11 +179,11 @@ while player.isAlive:
                 break
 
     for bullet in enemyBullets:
-        if bullet.ycor + bullet.height> wallBottom:
+        if bullet.ycor + bullet.height> wallBottom:           
             try:
                 enemyBullets.remove(bullet)
             except ValueError:
-                pass
+                pass 
         if isCollision(player, bullet):
             player.isAlive = False
             
